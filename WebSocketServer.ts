@@ -59,7 +59,7 @@ io.on('connect', (socket) => {
     io.to("lobby").emit('receiveMessage', { from: socket.id, message: data.message });
     //first it says .to "lobby", ya3ny everyone in "lobby" (literally everyone in our case)
     //then it emits 1. the event name, this event name HAS to be the same as the one the client is listening, casing and everything
-    //the client will have a io.on for "receiveMessage" to accept this message/emition
+    //the client will have a socket.on for "receiveMessage" to accept this message/emition
 
   });
 
