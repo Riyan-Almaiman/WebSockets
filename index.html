@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title></title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="" />
+  </head>
+  <body>
+
+
+    <p>socket id: <span id="id"></span></p>
+    <input id="input" style = "font-size: 50px;">
+                <button onclick="sendMessage()" style = "font-size: 25px;"> Send </button>
+
+                <div id="messages"></div>
+
+
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+
+
+
+    <script>
+        
+
+
+//initialize websockets here on the client with a link to the websocket server 
+//you can als make it so that the server listens for a get request at http://localhost:3000/game and create a socket only then
+ const socket = io('https://valley-candle-distance.glitch.me');
+
+
+
+ //when you connect server sends back a connect event, here you listen to it if you want to do something with it
+ //like use the id assigned to you
+ socket.on('connect', () => {
+        //use the id to dispay it on the page
+        document.getElementById("id").innerText = socket.id;
+    });
+
+
+ //this has to be initialized by the client like when they click a button it activates this function to emit smthng to the server
+ async function sendMessage(){
+        //get message from input
+        message = document.getElementById("input").value;
+        console.log(message);
+
+
+        //server has to have an event with the same name as the event name you send
+        socket.emit("sendMessage", {to: "lobby",message: message });  //socket.emit(eventName, [eventData], [callback])
+
+
+
+    }
+
+
+
+    //this is where you listen for an evvent named "receiveMessage" from the server and then do something with it
+    socket.on("receiveMessage", (data) => {
+            
+            if(socket.id!=data.from){
+            let message = document.createElement("p");
+            message.innerHTML=data.message;
+            message.style.fontSize="20px";
+            console.log(message)
+            document.getElementById("messages").appendChild(message)
+        }
+                
+                
+
+      });
+
+
+
+
+    </script>
+
+  </body>
+</html>
