@@ -8,137 +8,156 @@
   </head>
   <body>
     <h1>PeerJS Audio Chat</h1>
-    <p>enter name and then click set name <input id="peer-id" type="text" placeholder="Enter name" /></p>
-        <p><button id="name-button" onclick="setname()">set name</button></p>
-
-    <p>then enter name to call: <input id="call-peer-id" type="text" placeholder="Enter name to call" /></p>
-
+    <p>Your Peer ID: <span id="my-peer-id"></span></p>
+    <p>Call Peer ID: <input id="call-peer-id" type="text" placeholder="Enter peer ID to call" /></p>
     <p><button id="call-button">Call</button></p>
     <p><button id="mute-button">Mute/Unmute</button></p>
     <div id="audio-container"></div>
     <script>
       // Get the UI elements
+      const myPeerIdSpan = document.getElementById("my-peer-id");
       const callPeerIdInput = document.getElementById("call-peer-id");
       const callButton = document.getElementById("call-button");
       const muteButton = document.getElementById("mute-button");
       const audioContainer = document.getElementById("audio-container");
 
-      function setname(){ const peer = new Peer(document.getElementById("peer-id").value,{
-  host: "0.peerjs.com",
-  port: 443,
-  path: "/",
-  pingInterval: 5000,
-});
-
-  
-
-      // Get the local audio stream
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then((localStream) => {
-          // Store the stream in the variable
-          stream = localStream;
-
-          // Listen for incoming calls
-          peer.on("call", (call) => {
-            // Answer the call with the local stream
-            call.answer(stream);
-
-            // Log the call
-            console.log("Answered call from:", call.peer);
-
-            // Listen for the remote stream
-            call.on("stream", (remoteStream) => {
-              // Log the remote stream
-              console.log("Got remote stream from:", call.peer, remoteStream);
-
-              // Create a new audio element for the remote stream
-              const audio = document.createElement("audio");
-              audio.srcObject = remoteStream;
-              audio.autoplay = true;
-
-              // Add the audio element to the audio container
-              audioContainer.appendChild(audio);
-            });
-
-            // Handle errors and disconnections
-            call.on("error", (error) => {
-              console.log("Error in call with:", call.peer, error);
-            });
-
-            call.on("close", () => {
-              console.log("Call closed with:", call.peer);
-            });
-          });
-
-          // Get the peer ID
-          peer.on("open",  (id) => {
-             console.log(id)
-            mayPeerIdSpan.innerHTML = id;
-          });
-        })
-        .catch((error) => {
-          // Log the error
-          console.error("Error getting local audio stream:", error);
-        });
       // Create a new Peer instance
-      
-      // Declare a variable to store the local stream
-
-
-
-      // Add a click listener to the call button
-      callButton.addEventListener("click", () => {
-        // Get the call peer ID from the input
-        const callPeerId = callPeerIdInput.value;
-
-        // Check if the call peer ID is valid
-        if (callPeerId) {
-          // Call the peer with the local stream
-          const call = peer.call(callPeerId, stream);
-
-          // Log the call
-          console.log("Called peer:", call.peer);
-
-          // Listen for the remote stream
-          call.on("stream", (remoteStream) => {
-            // Log the remote stream
-            console.log("Got remote stream from:", call.peer, remoteStream);
-
-            // Create a new audio element for the remote stream
-            const audio = document.createElement("audio");
-            audio.srcObject = remoteStream;
-            audio.autoplay = true;
-
-            // Add the audio element to the audio container
-            audioContainer.appendChild(audio);
-          });
-
-          // Handle errors and disconnections
-          call.on("error", (error) => {
-            console.log("Error in call with:", call.peer, error);
-          });
-
-          call.on("close", () => {
-            console.log("Call closed with:", call.peer);
-          });
-        }
+      const peer = new Peer(undefined, {
+        host: "0.peerjs.com",
+        port: 443,
+        path: "/",
+        debug: 3,
       });
 
-      // Add a click listener to the mute button
-      muteButton.addEventListener("click", () => {
-        // Check if the stream is available
-        if (stream) {
-          // Get the audio track from the stream
-          const audioTrack = stream.getAudioTracks()[0];
+      // Declare a variable to store the local stream
+      let stream;
 
-    // Toggle the enabled property of the audio track
-    audioTrack.enabled = !audioTrack.enabled;
+      // Listen for incoming connections
+      peer.on("connection", (conn) => {
+        console.log("Incoming connection from:", conn.peer);
+        conn.on("data", (data) => {
+          console.log("Received data from", conn.peer, ":", data);
+        });
+      });
 
-// Log the mute status
-console.log("Muted:", !audioTrack.enabled);
-}
-});}
+      // Listen for errors and disconnections
+      peer.on("error", (error) => {
+        console.error("Peer error:", error);
+      });
+
+      peer.on("disconnected", () => {
+        console.warn("Peer disconnected");
+        peer.reconnect();
+      });
+
+      // Listen for the open event
+      peer.on("open", (id) => {
+        console.log("My Peer ID:", id);
+        myPeerIdSpan.innerHTML = id;
+
+        // Get the local audio stream
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((localStream) => {
+            // Store the stream in the variable
+            stream = localStream;
+
+            // Listen for incoming calls
+            peer.on("call", (call) => {
+              // Answer the call with the local stream
+              call.answer(stream);
+
+              // Log the call
+              console.log("Answered call from:", call.peer);
+
+              // Listen for the remote stream
+              call.on("stream", (remoteStream) => {
+                // Log the remote stream
+                console.log("Got remote stream from:", call.peer, remoteStream);
+
+                // Create a new audio element for the remote stream
+                const audio = document.createElement("audio");
+                audio.srcObject = remoteStream;
+                audio.autoplay = true;
+
+                // Add the audio element to the audio container
+                audioContainer.appendChild(audio);
+              });
+
+              // Handle errors and disconnections
+              call.on("error", (error) => {
+                console.log("Error in call with:", call.peer, error);
+              });
+
+              call.on("close", () => {
+                console.log("Call closed with:", call.peer);
+              });
+            });
+          })
+          .catch((error) => {
+            // Log the error
+            console.error("Error getting local audio stream:", error);
+
+        // Disable the call button
+        callButton.disabled = true;
+
+        // Disable the mute button
+        muteButton.disabled = true;
+      });
+  });
+
+  // Listen for the call button click
+  callButton.addEventListener("click", () => {
+    const callPeerId = callPeerIdInput.value;
+    if (callPeerId) {
+      // Call the peer with the specified ID
+      const call = peer.call(callPeerId, stream);
+
+      // Log the call
+      console.log("Calling:", callPeerId);
+
+      // Listen for the remote stream
+      call.on("stream", (remoteStream) => {
+        // Log the remote stream
+        console.log("Got remote stream from:", callPeerId, remoteStream);
+
+        // Create a new audio element for the remote stream
+        const audio = document.createElement("audio");
+        audio.srcObject = remoteStream;
+        audio.autoplay = true;
+
+        // Add the audio element to the audio container
+        audioContainer.appendChild(audio);
+      });
+
+      // Handle errors and disconnections
+      call.on("error", (error) => {
+        console.log("Error in call with:", callPeerId, error);
+      });
+
+      call.on("close", () => {
+        console.log("Call closed with:", callPeerId);
+      });
+    }
+  });
+
+  // Listen for the mute button click
+  muteButton.addEventListener("click", () => {
+    if (stream) {
+      // Get the audio tracks from the local stream
+      const audioTracks = stream.getAudioTracks();
+
+      // Toggle the enabled state of each audio track
+      audioTracks.forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+
+      // Update the button label
+      const isMuted = !audioTracks[0].enabled;
+      muteButton.innerHTML = isMuted ? "Unmute" : "Mute";
+    }
+  });
 </script>
+
 </body>
 </html>
