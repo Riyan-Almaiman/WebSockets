@@ -22,12 +22,14 @@
       const muteButton = document.getElementById("mute-button");
       const audioContainer = document.getElementById("audio-container");
 
-      function setname(){
- const peer = new Peer(document.getElementById("peer-id").value, {
-		host: "valley-candle-distance.glitch.me",
-		port: 3000,
-		path: "/myapp",
-	});
+      function setname(){ const peer = new Peer(document.getElementById("peer-id").value,{
+  host: "0.peerjs.com",
+  port: 443,
+  path: "/",
+  pingInterval: 5000,
+});
+
+  
 
       // Get the local audio stream
       navigator.mediaDevices
