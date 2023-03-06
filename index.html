@@ -23,7 +23,7 @@
       const audioContainer = document.getElementById("audio-container");
 
       function setname(){
- const peer = new Peer("someid", {
+ const peer = new Peer(document.getElementById("peer-id").value, {
 		host: "valley-candle-distance.glitch.me",
 		port: 9000,
 		path: "/myapp",
