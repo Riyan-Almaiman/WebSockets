@@ -22,9 +22,12 @@
       const muteButton = document.getElementById("mute-button");
       const audioContainer = document.getElementById("audio-container");
 
-      function setname(){ let peer = new Peer({host:'peerjs-server.herokuapp.com', secure:true, port:443})
-
-  
+      function setname(){
+ const peer = new Peer("someid", {
+		host: "valley-candle-distance.glitch.me",
+		port: 9000,
+		path: "/myapp",
+	});
 
       // Get the local audio stream
       navigator.mediaDevices
