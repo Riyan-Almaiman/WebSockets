@@ -22,10 +22,7 @@
       const muteButton = document.getElementById("mute-button");
       const audioContainer = document.getElementById("audio-container");
 
-      function setname(){ const peer = new Peer(document.getElementById("peer-id").value,{
-  host: "valley-candle-distance.glitch.me",
-  port: 3000,
-  path: "/chakratourismhw",
+      function setname(){ let peer = new Peer({host:'peerjs-server.herokuapp.com', secure:true, port:443})
 
   
 }) ; 
