@@ -1,163 +1,82 @@
 <!DOCTYPE html>
+
 <html>
   <head>
-    <meta charset="UTF-8" />
-    <title>PeerJS Audio Chat</title>
-    <!-- Import PeerJS library -->
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title></title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="" />
   </head>
   <body>
-    <h1>PeerJS Audio Chat</h1>
-    <p>Your Peer ID: <span id="my-peer-id"></span></p>
-    <p>Call Peer ID: <input id="call-peer-id" type="text" placeholder="Enter peer ID to call" /></p>
-    <p><button id="call-button">Call</button></p>
-    <p><button id="mute-button">Mute/Unmute</button></p>
-    <div id="audio-container"></div>
+
+
+    <p>socket id: <span id="id"></span></p>
+    <input id="input" style = "font-size: 50px;">
+                <button onclick="sendMessage()" style = "font-size: 25px;"> Send </button>
+
+                <div id="messages"></div>
+
+
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+
+
+
     <script>
-      // Get the UI elements
-      const myPeerIdSpan = document.getElementById("my-peer-id");
-      const callPeerIdInput = document.getElementById("call-peer-id");
-      const callButton = document.getElementById("call-button");
-      const muteButton = document.getElementById("mute-button");
-      const audioContainer = document.getElementById("audio-container");
+        
 
-      // Create a new Peer instance
-      const peer = new Peer(undefined, {
-        host: "0.peerjs.com",
-        port: 443,
-        path: "/",
-        debug: 3,
-      });
 
-      // Declare a variable to store the local stream
-      let stream;
+//initialize websockets here on the client with a link to the websocket server 
+//you can als make it so that the server listens for a get request at http://localhost:3000/game and create a socket only then
+ const socket = io('http://localhost:3000');
 
-      // Listen for incoming connections
-      peer.on("connection", (conn) => {
-        console.log("Incoming connection from:", conn.peer);
-        conn.on("data", (data) => {
-          console.log("Received data from", conn.peer, ":", data);
-        });
-      });
 
-      // Listen for errors and disconnections
-      peer.on("error", (error) => {
-        console.error("Peer error:", error);
-      });
 
-      peer.on("disconnected", () => {
-        console.warn("Peer disconnected");
-        peer.reconnect();
-      });
+ //when you connect server sends back a connect event, here you listen to it if you want to do something with it
+ //like use the id assigned to you
+ socket.on('connect', () => {
+        //use the id to dispay it on the page
+        document.getElementById("id").innerText = socket.id;
+    });
 
-      // Listen for the open event
-      peer.on("open", (id) => {
-        console.log("My Peer ID:", id);
-        myPeerIdSpan.innerHTML = id;
 
-        // Get the local audio stream
-        navigator.mediaDevices
-          .getUserMedia({ audio: true })
-          .then((localStream) => {
-            // Store the stream in the variable
-            stream = localStream;
+ //this has to be initialized by the client like when they click a button it activates this function to emit smthng to the server
+ async function sendMessage(){
+        //get message from input
+        message = document.getElementById("input").value;
+        console.log(message);
 
-            // Listen for incoming calls
-            peer.on("call", (call) => {
-              // Answer the call with the local stream
-              call.answer(stream);
 
-              // Log the call
-              console.log("Answered call from:", call.peer);
+        //server has to have an event with the same name as the event name you send
+        socket.emit("sendMessage", {to: "lobby",message: message });  //socket.emit(eventName, [eventData], [callback])
 
-              // Listen for the remote stream
-              call.on("stream", (remoteStream) => {
-                // Log the remote stream
-                console.log("Got remote stream from:", call.peer, remoteStream);
 
-                // Create a new audio element for the remote stream
-                const audio = document.createElement("audio");
-                audio.srcObject = remoteStream;
-                audio.autoplay = true;
 
-                // Add the audio element to the audio container
-                audioContainer.appendChild(audio);
-              });
-
-              // Handle errors and disconnections
-              call.on("error", (error) => {
-                console.log("Error in call with:", call.peer, error);
-              });
-
-              call.on("close", () => {
-                console.log("Call closed with:", call.peer);
-              });
-            });
-          })
-          .catch((error) => {
-            // Log the error
-            console.error("Error getting local audio stream:", error);
-
-        // Disable the call button
-        callButton.disabled = true;
-
-        // Disable the mute button
-        muteButton.disabled = true;
-      });
-  });
-
-  // Listen for the call button click
-  callButton.addEventListener("click", () => {
-    const callPeerId = callPeerIdInput.value;
-    if (callPeerId) {
-      // Call the peer with the specified ID
-      const call = peer.call(callPeerId, stream);
-
-      // Log the call
-      console.log("Calling:", callPeerId);
-
-      // Listen for the remote stream
-      call.on("stream", (remoteStream) => {
-        // Log the remote stream
-        console.log("Got remote stream from:", callPeerId, remoteStream);
-
-        // Create a new audio element for the remote stream
-        const audio = document.createElement("audio");
-        audio.srcObject = remoteStream;
-        audio.autoplay = true;
-
-        // Add the audio element to the audio container
-        audioContainer.appendChild(audio);
-      });
-
-      // Handle errors and disconnections
-      call.on("error", (error) => {
-        console.log("Error in call with:", callPeerId, error);
-      });
-
-      call.on("close", () => {
-        console.log("Call closed with:", callPeerId);
-      });
     }
-  });
 
-  // Listen for the mute button click
-  muteButton.addEventListener("click", () => {
-    if (stream) {
-      // Get the audio tracks from the local stream
-      const audioTracks = stream.getAudioTracks();
 
-      // Toggle the enabled state of each audio track
-      audioTracks.forEach((track) => {
-        track.enabled = !track.enabled;
+
+    //this is where you listen for an evvent named "receiveMessage" from the server and then do something with it
+    socket.on("receiveMessage", (data) => {
+            
+            if(socket.id!=data.from){
+            let message = document.createElement("p");
+            message.innerHTML=data.message;
+            message.style.fontSize="20px";
+            console.log(message)
+            document.getElementById("messages").appendChild(message)
+        }
+                
+                
+
       });
 
-      // Update the button label
-      const isMuted = !audioTracks[0].enabled;
-      muteButton.innerHTML = isMuted ? "Unmute" : "Mute";
-    }
-  });
-</script>
 
-</body>
+
+
+    </script>
+
+  </body>
 </html>
